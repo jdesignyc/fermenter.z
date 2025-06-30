@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>퍼멘터즈 Vol.1: 먹어서 지켜내는 삶</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Google Fonts: DM Serif Display & Gowun Batang -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Gowun+Batang&display=swap" rel="stylesheet">
+    <style>
+        /* === Sensory Zine Redesign === */
+        html {
+            scroll-behavior: smooth;
+        }
+        body {
+            font-family: 'Gowun Batang', serif;
+            background-color: #F8F5F1;
+            /* Subtle texture background to mimic paper */
+            background-image: url('data:image/svg+xml,%3Csvg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"%3E%3Cg fill="none" fill-rule="evenodd"%3E%3Cg fill="%23D4CEC5" fill-opacity="0.07"%3E%3Cpath d="M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z"/%3E%3C/g%3E%3C/g%3E%3C/svg%3E');
+            color: #312E2B;
+            font-size: 18px;
+            line-height: 1.9;
+        }
+        
+        /* Typography */
+        h1, h2, h3, h4, .quote, .zine-title {
+            font-family: 'DM Serif Display', serif;
+            font-weight: 400;
+            color: #212121;
+            letter-spacing: -0.5px;
+        }
+        h1 { font-size: 5rem; line-height: 1.1; }
+        h2 { font-size: 3.5rem; line-height: 1.2; text-align: center; }
+        h3 { font-size: 1.75rem; color: #8F5B46; }
+
+        .quote {
+            font-size: 2.25rem;
+            font-style: italic;
+            text-align: center;
+            line-height: 1.4;
+            margin: 4rem 0;
+            padding: 2rem;
+            border-top: 2px solid #D1C7BC;
+            border-bottom: 2px solid #D1C7BC;
+        }
+        
+        /* Layout & Animation */
+        .content-wrapper { max-width: 1200px; }
+        .section-fade-in {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+        }
+        .section-fade-in.is-visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .section-spacing {
+            padding: 8rem 0;
+        }
+
+        /* Components */
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .gochujang-grid {
+            display: grid;
+            grid-template-columns: repeat(1, 1fr);
+            gap: 2rem;
+        }
+        @media (min-width: 1024px) {
+            .gochujang-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        .gochujang-card {
+            background-color: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(10px);
+            padding: 2.5rem;
+            border: 1px solid #EAE2D9;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+            transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
+        }
+        .gochujang-card:hover { transform: scale(1.02); box-shadow: 0 15px 40px rgba(0,0,0,0.1); }
+        .award-tag {
+            background-color: #E8DBCF;
+            color: #795548;
+            padding: 0.3rem 0.8rem;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            font-family: 'Gowun Batang', serif;
+            align-self: flex-start;
+        }
+        .chart-wrapper {
+             background-color: rgba(255, 255, 255, 0.7);
+             padding: 2.5rem;
+             border: 1px solid #EAE2D9;
+        }
+        .tasting-language-item {
+            padding-bottom: 2rem;
+            border-bottom: 1px dashed #D1C7BC;
+        }
+        .tasting-language-item:last-child {
+            border-bottom: none;
+        }
+        
+        /* Resonance Chart Styles */
+        .resonance-row {
+            display: flex;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+        .resonance-label {
+            width: 5rem;
+            text-align: right;
+            padding-right: 1.5rem;
+            font-size: 1.1rem;
+            color: #5c554f;
+        }
+        .resonance-bar-container {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            position: relative; /* For tooltip positioning */
+        }
+        .resonance-bar {
+            height: 10px;
+            border-radius: 5px;
+            transition: all 0.5s ease-out;
+        }
+        
+        /* Tooltip & Legend Styles */
+        #resonance-tooltip {
+            position: absolute;
+            background-color: rgba(0,0,0,0.8);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 14px;
+            pointer-events: none; /* So it doesn't interfere with mouse events */
+            opacity: 0;
+            transition: opacity 0.2s;
+            white-space: nowrap;
+        }
+        .resonance-legend {
+            display: flex;
+            justify-content: center;
+            gap: 1.5rem;
+            margin-top: 2rem;
+            flex-wrap: wrap;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 14px;
+        }
+        .legend-color {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+
+    </style>
+</head>
+<body class="antialiased">
+
+    <!-- Main Container -->
+    <div class="container mx-auto content-wrapper px-6">
+
+        <!-- Header -->
+        <header class="hero text-center">
+            <div class="section-fade-in">
+                <p class="text-lg text-gray-500 mb-4">Fermenters Zine Vol. 1</p>
+                <h1 class="mb-4">먹어서<br>지켜내는 삶</h1>
+                <p class="max-w-xl mx-auto mt-8">발효를 사랑하고, 삶의 방식으로 여기며, 함께 더 나은 삶을 살아가고자 모인 청년 커뮤니티, 퍼멘터즈의 첫 번째 이야기.</p>
+            </div>
+        </header>
+
+        <!-- Intro Quote -->
+        <section class="section-spacing">
+             <div class="section-fade-in">
+                <p class="quote">"You are what you FERMENT!"</p>
+                <div class="max-w-3xl mx-auto text-center mt-12">
+                    <p>퍼멘터즈가 지향하는 '미식'은 발효미식입니다. 건강한 땅에서 난 재료, 미생물과 사람의 협업, 그리고 시간의 힘으로 만들어진 음식. 바로 그것이 우리가 추구하는 '지속가능한 발효미식'입니다.</p>
+                    <p class="mt-4">우리 몸속 수많은 미생물은 면역, 감정, 뇌 기능에까지 영향을 미칩니다. 건강한 발효음식은 몸을 살리고, 감각을 일깨우며, 생명에 대한 감사를 배우게 합니다. 하지만 식탁에서 점점 사라지는 발효음식은 우리의 정체성에도 균열을 내고 있습니다. 그래서 우리는 외칩니다. <strong class="font-semibold">"먹어서 지켜내자!"</strong></p>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Section: Deeper look -->
+        <section class="section-spacing">
+            <div class="section-fade-in text-center">
+                 <h2 class="mb-8">떡볶이 속 고추장을 다시 바라보다</h2>
+                 <div class="max-w-3xl mx-auto">
+                    <p>소울푸드 떡볶이의 핵심, 고추장. 그 맛 뒤에 숨은 계절의 리듬과 조상들의 지혜를 아시나요?</p>
+                    <p>예를 들어, 전통 고추장용 메주는 습한 여름에 띄웁니다. 쉽게 상할 수 있는 조건 속에서, 선조들은 작고 동그란 도넛 형태로 메주를 만들었습니다. 공기가 잘 통하게 구멍을 내고, 작게 만들어 속까지 잘 마르게 한 것입니다. 이 단순한 형상이야말로 자연을 읽고 발효를 위한 환경을 설계한 기술이자 미학이었습니다.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 2: Tasting -->
+        <section class="section-spacing">
+            <div class="section-fade-in">
+                <h2 class="mb-16">네 가지 고추장, 네 가지 우주</h2>
+                <div class="gochujang-grid">
+                     <div class="gochujang-card">
+                        <span class="award-tag">2023 참발효어워즈 대상</span>
+                        <h3 class="mt-4">방주품 보리고추장</h3>
+                        <p class="text-sm mb-4 text-gray-500">(울진, 방주명가 강형국)</p>
+                        <p>100% 콩으로 만든 전통 메주와 직접 재배한 유기농 보리를 사용합니다. 보리쌀을 고두밥으로 찐 뒤 발효, 건조, 분쇄의 과정을 거쳐 고추장에 섞습니다. 6개월의 숙성을 거친 정직하고 깊은 맛이 특징입니다.</p>
+                    </div>
+                    <div class="gochujang-card">
+                        <span class="award-tag">2022 참발효어워즈 대상</span>
+                        <h3 class="mt-4">구본일 찹쌀인절미고추장</h3>
+                         <p class="text-sm mb-4 text-gray-500">&nbsp;</p>
+                        <p>고문헌에 기록된 인절미 고추장 제조법을 그대로 따릅니다. 찹쌀을 갈아 치댄 인절미를 엿기름물에 7~10시간 삭혀 만들죠. 물엿 대신 직접 고은 조청의 은은하고 기품있는 단맛이 일품입니다.</p>
+                    </div>
+                    <div class="gochujang-card">
+                        <span class="award-tag">2025 참발효어워즈 대상</span>
+                        <h3 class="mt-4">다산 전복볶음고추장</h3>
+                        <p class="text-sm mb-4 text-gray-500">(강진, 다산명가 국령애)</p>
+                        <p>다산 정약용의 제자였던 4대조부터 이어진 내력이 담긴 고추장입니다. 과거 전복 진상지였던 강진의 풍부한 전복을 활용하며, 특히 전복 내장 분말을 넣어 깊고 진한 풍미를 더합니다.</p>
+                    </div>
+                    <div class="gochujang-card">
+                        <h3 class="mt-11">해찬들 태양초 우리쌀</h3>
+                         <p class="text-sm mb-4 text-gray-500">(씨제이제일제당(주))</p>
+                        <p>산업 시스템이 만든 표준화된 맛. 많은 이들이 '떡볶이의 맛'으로 기억하는 익숙함입니다. 장맛을 모르는 이들에게는 '고추장이란 이런 것'으로 각인되기도 하는, 우리 시대의 또 다른 기준점입니다.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 3: Tasting Results Chart -->
+        <section class="section-spacing">
+            <div class="section-fade-in">
+                <h2 class="mb-16">미각 분석, 맛의 지도를 그리다</h2>
+                 <p class="intro-text-block mb-16">"맛있다"는 말만으로는 충분하지 않습니다. 참가자들은 짠맛, 감칠맛, 단맛, 매운맛, 여운 다섯 가지 요소를 5점 척도로 평가했습니다. 그 결과는 고추장마다 어떤 감각이 더 강하게 느껴졌는지, 또 어떤 맛에서 공감과 차이가 있었는지를 보여줍니다.</p>
+                <div class="grid grid-cols-1 xl:grid-cols-2 gap-8">
+                    <div class="chart-wrapper">
+                        <canvas id="tastingRadarChart"></canvas>
+                    </div>
+                    <div class="chart-wrapper">
+                        <canvas id="tastingBarChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Section: Deviation Chart -->
+        <section class="section-spacing">
+            <div class="section-fade-in">
+                <h2 class="mb-16">취향의 파동(波動)</h2>
+                <p class="intro-text-block mb-16">하나의 고추장을 맛보아도, 우리의 혀끝에 남는 기억은 저마다 다릅니다. 어떤 맛은 모두를 고개 끄덕이게 했고, 어떤 맛은 뜨거운 논쟁을 낳았습니다. 아래의 스펙트럼은 그 공감과 논쟁의 흔적입니다. 빛이 좁고 선명할수록 우리의 마음이 하나로 모였고, 넓고 부드럽게 퍼질수록 각자의 다채로운 이야기가 펼쳐졌습니다.</p>
+                <div class="chart-wrapper p-8 md:p-12">
+                    <div id="resonance-container">
+                        <!-- Resonance chart will be generated here by JavaScript -->
+                    </div>
+                    <div class="resonance-legend" id="resonance-legend">
+                        <!-- Legend will be generated here by JavaScript -->
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 4: Tasting Language -->
+        <section class="section-spacing">
+            <div class="section-fade-in">
+                <h2 class="mb-16">우리의 혀 끝에서 피어난 언어들</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-x-16 gap-y-12">
+                     <div class="tasting-language-item">
+                        <h3>방주품 보리고추장</h3>
+                        <p><strong>맛의 언어:</strong> 구수한 된장 향이 먼저 와서 간장처럼 짭조름하게 마무리됨.<br>
+                        <strong>공간의 기억:</strong> 시골의 부엌, 오래된 방앗간</p>
+                        <em class="font-semibold text-gray-600">"끓일수록 깊어지는 맛, 찌개·조림에 어울리는 정직한 기본 고추장"</em>
+                    </div>
+                     <div class="tasting-language-item">
+                        <h3>구본일 찹쌀인절미고추장</h3>
+                        <p><strong>맛의 언어:</strong> 단맛과 감칠맛이 나란히 흐르고, 윤기 있는 텍스처에 깊은 된장 뉘앙스.<br>
+                        <strong>감성의 기억:</strong> 할머니가 밥 비벼 주던 가을 오후</p>
+                        <em class="font-semibold text-gray-600">"그리운 집밥, 국물요리나 밥반찬에 딱 좋은 포근한 고추장"</em>
+                    </div>
+                     <div class="tasting-language-item">
+                        <h3>다산 전복볶음고추장</h3>
+                        <p><strong>맛의 언어:</strong> 조청의 단맛에 라면스프 같은 중독성, 톡톡 씹히는 건더기에서 오는 놀라움.<br>
+                        <strong>계절의 이미지:</strong> 봄 소풍, 간식, 길거리 푸드</p>
+                        <em class="font-semibold text-gray-600">"혼자서도 맛있다, 비빔 요리의 주인공이 되는 고추장"</em>
+                    </div>
+                     <div class="tasting-language-item">
+                        <h3>해찬들 태양초 우리쌀</h3>
+                        <p><strong>맛의 언어:</strong> 깔끔하지만 혀끝이 얼얼해질 정도로 매콤함, 짠맛은 뒤로 물러나 있음.<br>
+                        <strong>감성의 기억:</strong> 시장 떡볶이, 엄마가 해준 여름 비빔국수</p>
+                        <em class="font-semibold text-gray-600">"야식에 어울리는 한 방, 겨울밤 포차 감성의 고추장"</em>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 5: Recipe -->
+        <section class="section-spacing">
+            <div class="section-fade-in text-center">
+                <h2 class="mb-16">고추장버터, 발효의 새 얼굴</h2>
+                <div class="max-w-lg mx-auto bg-white/70 border border-gray-200 p-8">
+                    <h3 class="text-center">Recipe</h3>
+                    <p class="text-center mt-4">실온 무염버터 100g에 고추장 1큰술. 기호에 따라 다진 마늘이나 꿀을 더해도 좋습니다. 빵, 크래커, 구운 감자 위에 올려보세요. 전통이 지금 우리 식탁의 '풍미'가 됩니다.</p>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Footer -->
+        <footer class="text-center py-24 border-t border-gray-200">
+            <div class="section-fade-in">
+                <h2 class="mb-8">맛은 감각 이상의 공감이다</h2>
+                <p class="max-w-3xl mx-auto">우리는 '맛있다'는 말 이상의 언어를 찾았습니다. 내가 느낀 맛을 나누는 일은 곧 나 자신과 서로를 이해하는 과정입니다. '맛있는 맛'을 고르는 것이 아니라, '각자의 감각을 회복하고 이야기하는 장'을 연 것입니다. 퍼멘터즈의 미식은 발효를 통해 자연, 사람, 감각과 다시 연결되는 일입니다. 그 시작을 고추장이 열어주었습니다.</p>
+                <p class="font-bold text-lg mt-12">그리고 우리는 앞으로도, 계속 먹어서 지켜낼 것입니다.</p>
+            </div>
+        </footer>
+    </div>
+    
+    <!-- Tooltip Element -->
+    <div id="resonance-tooltip"></div>
+
+    <script>
+        // Fade-in animation script
+        const sections = document.querySelectorAll('.section-fade-in');
+        const observer = new IntersectionObserver(entries => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('is-visible');
+                }
+            });
+        }, { threshold: 0.1 });
+        sections.forEach(section => observer.observe(section));
+
+        // Chart.js script
+        Chart.defaults.font.family = "'Gowun Batang', serif";
+        Chart.defaults.color = '#312E2B';
+
+        const chartData = {
+            labels: ['감칠맛', '단맛', '매운맛', '여운', '짠맛'],
+            datasets: [
+                { label: 'A. 방주품 보리', data: [2.92, 2.64, 2.86, 2.75, 3.25], backgroundColor: 'rgba(143, 91, 70, 0.5)', borderColor: '#8F5B46', borderWidth: 2 },
+                { label: 'B. 구본일 찹쌀인절미', data: [3.64, 3.25, 3.75, 3.28, 3.56], backgroundColor: 'rgba(215, 151, 109, 0.5)', borderColor: '#D7976D', borderWidth: 2 },
+                { label: 'C. 다산 전복볶음', data: [3.89, 4.11, 3.44, 3.31, 2.75], backgroundColor: 'rgba(131, 145, 113, 0.5)', borderColor: '#839171', borderWidth: 2 },
+                { label: 'D. 해찬들 태양초', data: [3.00, 2.97, 3.81, 3.11, 3.08], backgroundColor: 'rgba(164, 164, 164, 0.5)', borderColor: '#A4A4A4', borderWidth: 2 }
+            ]
+        };
+        
+        const commonPlugins = {
+            legend: {
+                position: 'bottom',
+                labels: { boxWidth: 15, padding: 25, font: { size: 14 } }
+            }
+        };
+
+        const barCtx = document.getElementById('tastingBarChart').getContext('2d');
+        new Chart(barCtx, {
+            type: 'bar',
+            data: JSON.parse(JSON.stringify(chartData)),
+            options: {
+                plugins: { ...commonPlugins, title: { display: true, text: '맛의 강도 비교', font: { size: 22, family: "'DM Serif Display', serif" }, padding: { bottom: 25 } }, legend: { display: false } },
+                scales: { y: { beginAtZero: true, max: 5, grid: { color: '#EAE2D9' } }, x: { grid: { display: false } } }
+            }
+        });
+
+        const radarCtx = document.getElementById('tastingRadarChart').getContext('2d');
+        new Chart(radarCtx, {
+            type: 'radar',
+            data: JSON.parse(JSON.stringify(chartData)),
+            options: {
+                plugins: { ...commonPlugins, title: { display: true, text: '맛의 균형 보기', font: { size: 22, family: "'DM Serif Display', serif" }, padding: { bottom: 25 } } },
+                scales: {
+                    r: { beginAtZero: true, max: 5, angleLines: { color: '#EAE2D9' }, grid: { color: '#EAE2D9' }, pointLabels: { font: { size: 15 } }, ticks: { backdropColor: 'rgba(248, 245, 241, 0.6)', stepSize: 1 } }
+                },
+                elements: { line: { borderWidth: 2.5 } }
+            }
+        });
+        
+        // Resonance Chart
+        const deviationData = {
+            labels: ['감칠맛', '단맛', '매운맛', '여운', '짠맛'],
+            colors: ['#8F5B46', '#D7976D', '#839171', '#A4A4A4'],
+            gochujangs: [
+                { name: 'A. 방주품 보리고추장', deviations: [0.91, 0.89, 0.89, 0.88, 0.94] },
+                { name: 'B. 구본일 찹쌀인절미고추장', deviations: [0.72, 0.94, 0.78, 0.83, 1.11] },
+                { name: 'C. 다산 전복볶음고추장', deviations: [0.74, 0.81, 0.78, 0.67, 0.81] },
+                { name: 'D. 해찬들 태양초 고추장', deviations: [0.91, 0.92, 0.90, 0.81, 0.91] }
+            ]
+        };
+
+        const container = document.getElementById('resonance-container');
+        const legendContainer = document.getElementById('resonance-legend');
+        const tooltip = document.getElementById('resonance-tooltip');
+
+        deviationData.labels.forEach((label, index) => {
+            const row = document.createElement('div');
+            row.className = 'resonance-row';
+            const labelDiv = document.createElement('div');
+            labelDiv.className = 'resonance-label';
+            labelDiv.textContent = label;
+            const barContainer = document.createElement('div');
+            barContainer.className = 'resonance-bar-container';
+
+            deviationData.gochujangs.forEach((g, gIndex) => {
+                const bar = document.createElement('div');
+                bar.className = 'resonance-bar';
+                const deviation = g.deviations[index];
+                const minDev = 0.6;
+                const maxDev = 1.2;
+                const normalizedDev = (deviation - minDev) / (maxDev - minDev);
+                const width = 20 + (normalizedDev * 80);
+                const blur = 2 + (normalizedDev * 20);
+                const opacity = 0.9 - (normalizedDev * 0.4);
+                const color = deviationData.colors[gIndex];
+
+                bar.style.width = `${width}%`;
+                bar.style.backgroundColor = color;
+                bar.style.opacity = opacity;
+                bar.style.boxShadow = `0 0 ${blur}px ${color}`;
+                
+                // Add tooltip events
+                bar.addEventListener('mousemove', (e) => {
+                    tooltip.style.opacity = '1';
+                    tooltip.style.left = `${e.pageX + 10}px`;
+                    tooltip.style.top = `${e.pageY - 28}px`;
+                    tooltip.textContent = `${g.name} (의견 차이: ${deviation})`;
+                });
+                bar.addEventListener('mouseout', () => {
+                    tooltip.style.opacity = '0';
+                });
+
+                barContainer.appendChild(bar);
+            });
+
+            row.appendChild(labelDiv);
+            row.appendChild(barContainer);
+            container.appendChild(row);
+        });
+
+        // Generate Legend
+        deviationData.gochujangs.forEach((g, gIndex) => {
+            const legendItem = document.createElement('div');
+            legendItem.className = 'legend-item';
+            const colorBox = document.createElement('div');
+            colorBox.className = 'legend-color';
+            colorBox.style.backgroundColor = deviationData.colors[gIndex];
+            const legendText = document.createElement('span');
+            legendText.textContent = g.name;
+            legendItem.appendChild(colorBox);
+            legendItem.appendChild(legendText);
+            legendContainer.appendChild(legendItem);
+        });
+
+    </script>
+
+</body>
+</html>
